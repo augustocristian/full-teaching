@@ -87,7 +87,7 @@ if check_command ng; then
     echo "✅ Angular CLI ya está instalado (versión $(ng version | grep 'Angular CLI:' | awk '{print $3}'))"
 else
     echo "⚙️ Angular CLI no está instalado. Instalando globalmente..."
-    sudo npm install -g @angular/cli
+    sudo npm install -g @angular/cli@19.2.17
     echo "✅ Angular CLI instalado correctamente (versión $(ng version | grep 'Angular CLI:' | awk '{print $3}'))"
 fi
 
