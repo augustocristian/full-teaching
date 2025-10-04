@@ -91,4 +91,26 @@ else
     echo "✅ Angular CLI instalado correctamente (versión $(ng version | grep 'Angular CLI:' | awk '{print $3}'))"
 fi
 
+
+
+
+echo "🔍 Comprobando Python..."
+if check_command python3; then
+    echo "✅ Python ya está instalado (versión $(python3 --version))"
+else
+    echo "⚙️ Python no está instalado. Instalando..."
+    if check_command apt; then
+        sudo apt update
+        sudo apt install -y python3 python3-pip
+    elif check_command dnf; then
+        sudo dnf install -y python3 python3-pip
+    elif check_command brew; then
+        brew install python
+    else
+        echo "❌ No se pudo determinar el gestor de paquetes. Instala Python manualmente desde https://www.python.org/downloads/"
+        exit 1
+    fi
+    echo "✅ Python instalado correctamente (versión $(python3 --version))"
+fi
+
 echo "🎉 Configuración completada correctamente."
