@@ -26,6 +26,7 @@ import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.TokenOptions;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api-video-sessions")
@@ -91,7 +92,9 @@ public class VideoSessionController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Session session = sessionRepository.findOne(id_i);
+		Session session = sessionRepository.findById(id_i)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
+
 		if (session != null) { // sessionId belongs to a real Session
 			String sessionId;
 			String token;

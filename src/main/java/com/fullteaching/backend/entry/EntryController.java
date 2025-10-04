@@ -21,6 +21,8 @@ import com.fullteaching.backend.coursedetails.CourseDetailsRepository;
 import com.fullteaching.backend.user.User;
 import com.fullteaching.backend.user.UserComponent;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api-entries")
 public class EntryController {
@@ -62,8 +64,12 @@ public class EntryController {
 			log.error("CourseDetails ID '{}' is not of type Long", courseDetailsId);
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		
-		CourseDetails cd = courseDetailsRepository.findOne(id_i);
+
+		Optional<CourseDetails> optionalCourse = courseDetailsRepository.findById(id_i);
+		if (optionalCourse.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		CourseDetails cd = optionalCourse.get();
 		
 		ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorizationUsers(cd, cd.getCourse().getAttenders());
 		if (userAuthorized != null) { // If the user is not an attender of the course

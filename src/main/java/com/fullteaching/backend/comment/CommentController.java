@@ -19,6 +19,7 @@ import com.fullteaching.backend.coursedetails.CourseDetails;
 import com.fullteaching.backend.coursedetails.CourseDetailsRepository;
 import com.fullteaching.backend.user.User;
 import com.fullteaching.backend.user.UserComponent;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api-comments")
@@ -65,7 +66,9 @@ public class CommentController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		
-		CourseDetails cd = courseDetailsRepository.findOne(id_courseDetails);
+
+		CourseDetails cd = courseDetailsRepository.findById(id_courseDetails)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course details not found"));
 		
 		ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorizationUsers(cd, cd.getCourse().getAttenders());
 		if (userAuthorized != null) { // If the user is not an attender of the course
@@ -81,7 +84,9 @@ public class CommentController {
 			//The comment is a root comment
 			if (comment.getCommentParent() == null) {
 				log.info("Adding new root comment");
-				Entry entry = entryRepository.findOne(id_entry);
+				Entry entry  = entryRepository.findById(id_entry)
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entry details not found"));
+
 				if(entry != null) {
 					
 					comment = commentRepository.save(comment);
@@ -102,7 +107,10 @@ public class CommentController {
 			//The comment is a replay to another existing comment
 			else{
 				log.info("Adding new comment reply");
-				Comment cParent = commentRepository.findOne(comment.getCommentParent().getId());
+				Comment cParent = commentRepository.findById(comment.getCommentParent().getId())
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found"));
+
+
 				if(cParent != null){
 					
 					comment = commentRepository.save(comment);
@@ -111,8 +119,11 @@ public class CommentController {
 					/*Saving the modified parent comment: Cascade relationship between comment and 
 					 its replies will add the new comment to CommentRepository*/
 					commentRepository.save(cParent);
-					Entry entry = entryRepository.findOne(id_entry);
-					
+
+					Entry entry = entryRepository.findById(id_entry)
+							.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entry not found"));
+
+
 					log.info("New comment succesfully added: {}", comment.toString());
 					
 					return new ResponseEntity<>(new NewEntryCommentResponse(entry, comment), HttpStatus.CREATED);

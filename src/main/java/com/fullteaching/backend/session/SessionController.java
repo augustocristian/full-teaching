@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fullteaching.backend.course.Course;
 import com.fullteaching.backend.course.CourseRepository;
 import com.fullteaching.backend.security.AuthorizationService;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api-sessions")
@@ -48,7 +49,9 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		
-		Course course = courseRepository.findOne(id_i);
+
+		Course course = courseRepository.findById(id_i)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 		
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(course, course.getTeacher());
 		if (teacherAuthorized != null) { // If the user is not the teacher of the course
@@ -80,8 +83,9 @@ public class SessionController {
 			return authorized;
 		};
 		
-		Session s = sessionRepository.findOne(session.getId());
-		
+
+		Session s = sessionRepository.findById(session.getId())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
 		log.info("Updating session. Previous value: {}", s.toString());
 		
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(s, s.getCourse().getTeacher());
@@ -119,20 +123,23 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		
-		Session session = sessionRepository.findOne(id_i);
-		
+
+		Session session = sessionRepository.findById(id_i)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(session, session.getCourse().getTeacher());
 		if (teacherAuthorized != null) { // If the user is not the teacher of the course
 			return teacherAuthorized;
 		} else {
-		
-			Course course = courseRepository.findOne(session.getCourse().getId());
+
+			Course course = courseRepository.findById(session.getCourse().getId())
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
 			if (course != null){
 				
 				log.info("Deleting session: {}", session.toString());
 				
 				course.getSessions().remove(session);
-				sessionRepository.delete(id_i);
+				sessionRepository.deleteById(id_i);
 				courseRepository.save(course);
 				
 				log.info("Session successfully deleted");

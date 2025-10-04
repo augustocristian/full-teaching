@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,6 +37,7 @@ import com.fullteaching.backend.security.AuthorizationService;
 import com.fullteaching.backend.user.User;
 import com.fullteaching.backend.user.UserRepository;
 import com.fullteaching.backend.user.UserComponent;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api-load-files")
@@ -96,7 +98,11 @@ public class FileController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Course c = courseRepository.findOne(id_course);
+		Optional<Course> optionalCourse = courseRepository.findById(id_course);
+		if (optionalCourse.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		Course c = optionalCourse.get();
 
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(c, c.getTeacher());
 		if (teacherAuthorized != null) { // If the user is not the teacher of the course
@@ -148,7 +154,12 @@ public class FileController {
 					customFile.setLink(uploadedFile.getPath());
 					// ONLY ON DEVELOPMENT
 				}
-				fg = fileGroupRepository.findOne(id_fileGroup);
+				Optional<FileGroup> optionalFg = fileGroupRepository.findById(id_fileGroup);
+				if (optionalFg.isEmpty()) {
+					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				}
+				fg = optionalFg.get();
+
 				fg.getFiles().add(customFile);
 				fg.updateFileIndexOrder();
 				log.info("File succesfully uploaded to path '{}'", uploadedFile.getPath());
@@ -182,7 +193,8 @@ public class FileController {
 			return;
 		}
 
-		Course c = courseRepository.findOne(id_course);
+		Course c = courseRepository.findById(id_course)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
 		ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorizationUsers(c, c.getAttenders());
 		if (userAuthorized != null) { // If the user is not an attender of the course
@@ -190,8 +202,8 @@ public class FileController {
 			return;
 		} else {
 
-			com.fullteaching.backend.file.File f = fileRepository.findOne(id_file);
-
+			com.fullteaching.backend.file.File f = fileRepository.findById(id_file)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
 			if (f != null) {
 				
 				log.info("File name: '{}'", f.getName());
@@ -250,8 +262,8 @@ public class FileController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		User u = userRepository.findOne(id_user);
-
+		User u = userRepository.findById(id_user)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FileGroup not found"));
 		ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorization(u, this.user.getLoggedUser());
 		if (userAuthorized != null) { // If the user is not the teacher of the course
 			return userAuthorized;
@@ -339,8 +351,11 @@ public class FileController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Course c = courseRepository.findOne(id_course);
-		Comment comment = commentRepository.findOne(id_comment);
+		Course c = courseRepository.findById(id_course)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+		Comment comment = commentRepository.findById(id_comment)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
 
 		ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorizationUsers(c, c.getAttenders());
 		if (userAuthorized != null) { // If the user is not an attender of the course

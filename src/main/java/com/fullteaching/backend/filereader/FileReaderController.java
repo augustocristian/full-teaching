@@ -3,13 +3,7 @@ package com.fullteaching.backend.filereader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.Logger;
@@ -85,7 +79,12 @@ public class FileReaderController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Course c = courseRepository.findOne(id_course);
+		Optional<Course> optionalCourse = courseRepository.findById(id_course);
+
+		if (!optionalCourse.isPresent()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		Course c = optionalCourse.get();
 
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(c, c.getTeacher());
 		if (teacherAuthorized != null) { // If the user is not the teacher of the course
@@ -183,7 +182,7 @@ public class FileReaderController {
 
 		// Saving the attenders (all of them, just in case a field of the bidirectional
 		// relationship is missing in a Course or a User)
-		userRepository.save(newPossibleAttenders);
+		userRepository.saveAll(newPossibleAttenders);
 		// Saving the modified course
 		courseRepository.save(c);
 

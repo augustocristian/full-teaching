@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fullteaching.backend.course.Course;
 import com.fullteaching.backend.course.CourseRepository;
 import com.fullteaching.backend.security.AuthorizationService;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/assets/videos/{courseId}")
@@ -48,7 +49,8 @@ public class VideosHttpHandler {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 
-			Course c = courseRepository.findOne(id_course);
+			Course c = courseRepository.findById(id_course)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
 			ResponseEntity<Object> userAuthorized = authorizationService.checkAuthorizationUsers(c, c.getAttenders());
 			if (userAuthorized != null) { // If the user is not an attender of the course

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fullteaching.backend.coursedetails.CourseDetails;
 import com.fullteaching.backend.coursedetails.CourseDetailsRepository;
 import com.fullteaching.backend.security.AuthorizationService;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api-forum")
@@ -45,8 +46,10 @@ public class ForumController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		CourseDetails cd = courseDetailsRepository.findOne(id_i);
-		
+		CourseDetails cd = courseDetailsRepository.findById(id_i)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FileGroup not found"));
+
+
 		log.info("Updating forum. Previous value: {}", cd.getForum());
 		
 		ResponseEntity<Object> teacherAuthorized = authorizationService.checkAuthorization(cd, cd.getCourse().getTeacher());
